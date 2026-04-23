@@ -83,9 +83,8 @@ export default function Vote() {
       if (zoom) return;
       if (phase !== 'choosing') return;
       if (e.key === '1') handleVote('gpt');
-      else if (e.key === '2') handleVote('banana');
-      else if (e.key === '3') handleVote('tie');
-      else if (e.key === '4') handleVote('skip');
+      else if (e.key === '2') handleVote('skip');
+      else if (e.key === '3') handleVote('banana');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -258,11 +257,10 @@ export default function Vote() {
       />
 
       {/* Buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <VoteBtn disabled={phase !== 'choosing' || leftMissing} onClick={() => handleVote('gpt')} kbd="1" label="GPT Image 2" variant="gpt" active={choice === 'gpt'} />
-        <VoteBtn disabled={phase !== 'choosing' || rightMissing} onClick={() => handleVote('banana')} kbd="2" label="Nano Banana 2" variant="banana" active={choice === 'banana'} />
-        <VoteBtn disabled={phase !== 'choosing'} onClick={() => handleVote('tie')} kbd="3" label="İkisi de iyi" variant="tie" active={choice === 'tie'} />
-        <VoteBtn disabled={phase !== 'choosing'} onClick={() => handleVote('skip')} kbd="4" label="Karar veremedim" variant="skip" active={choice === 'skip'} />
+        <VoteBtn disabled={phase !== 'choosing'} onClick={() => handleVote('skip')} kbd="2" label="Karar veremedim" variant="skip" active={choice === 'skip'} />
+        <VoteBtn disabled={phase !== 'choosing' || rightMissing} onClick={() => handleVote('banana')} kbd="3" label="Nano Banana 2" variant="banana" active={choice === 'banana'} />
       </div>
 
       {/* Feedback */}
@@ -291,7 +289,7 @@ export default function Vote() {
       </div>
 
       <p className="text-center text-[11px] text-gray-600 mt-4">
-        Klavye: 1 = GPT, 2 = Banana, 3 = İkisi de iyi, 4 = Kararsız · Oy verdikten sonra değiştirilemez
+        Klavye: 1 = GPT, 2 = Kararsız, 3 = Banana · Oy verdikten sonra değiştirilemez
       </p>
     </div>
   );
@@ -309,7 +307,7 @@ function VoteBtn({
   disabled: boolean;
   kbd: string;
   label: string;
-  variant: 'gpt' | 'banana' | 'tie' | 'skip';
+  variant: 'gpt' | 'banana' | 'skip';
   active: boolean;
 }) {
   const base = 'relative rounded-xl py-4 px-3 font-semibold text-sm transition-all border disabled:cursor-not-allowed';
@@ -320,12 +318,9 @@ function VoteBtn({
     banana: active
       ? 'bg-banana/25 border-banana text-white shadow-glow-banana'
       : 'bg-banana/10 border-banana/40 text-banana-soft hover:bg-banana/20 hover:border-banana',
-    tie: active
-      ? 'bg-win/20 border-win text-white'
-      : 'bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 hover:border-white/20',
     skip: active
       ? 'bg-gray-600/30 border-gray-500 text-white'
-      : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20',
+      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20',
   }[variant];
 
   return (

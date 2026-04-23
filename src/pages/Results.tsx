@@ -134,15 +134,9 @@ export default function Results() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="rounded-lg px-3 py-2 bg-white/5">
-              <div className="text-[10px] text-gray-500 uppercase tracking-wider">İkisi de iyi</div>
-              <div className="text-lg font-bold text-win">{mine.tie}</div>
-            </div>
-            <div className="rounded-lg px-3 py-2 bg-white/5">
-              <div className="text-[10px] text-gray-500 uppercase tracking-wider">Kararsız</div>
-              <div className="text-lg font-bold text-gray-300">{mine.skip}</div>
-            </div>
+          <div className="rounded-lg px-3 py-2 bg-white/5 mb-5">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider">Karar veremedim</div>
+            <div className="text-lg font-bold text-gray-300">{mine.skip + mine.tie}</div>
           </div>
 
           {winner && winner !== 'draw' && (

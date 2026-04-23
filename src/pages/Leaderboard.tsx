@@ -158,9 +158,8 @@ export default function Leaderboard() {
 
             <ScoreBar gpt={totals.gpt} banana={totals.banana} height="h-4" />
 
-            <div className="flex justify-between text-xs text-gray-500 mt-4">
-              <span>İkisi de iyi: <AnimatedNumber value={totals.tie} /></span>
-              <span>Karar veremedim: <AnimatedNumber value={totals.skip} /></span>
+            <div className="flex justify-end text-xs text-gray-500 mt-4">
+              <span>Karar veremedim: <AnimatedNumber value={totals.skip + totals.tie} /></span>
             </div>
           </>
         )}
