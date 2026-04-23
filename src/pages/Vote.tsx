@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MATCHUPS } from '../data/matchups';
 import type { Matchup, VoteChoice } from '../types';
-import { getLocalVotes, saveLocalVote, getMatchupPosition, resetVotes } from '../lib/session';
+import { getLocalVotes, saveLocalVote, resetVotes } from '../lib/session';
 import { submitVote } from '../lib/api';
 import CategoryBadge from '../components/CategoryBadge';
 import AspectImage from '../components/AspectImage';
 
-type Phase = 'choosing' | 'revealing' | 'advancing';
+type Phase = 'choosing' | 'revealing';
 
 function pickStartIndex(): number {
   const voted = new Set(getLocalVotes().map((v) => v.matchupId));
@@ -27,14 +27,12 @@ export default function Vote() {
   const advanceTimer = useRef<number | null>(null);
 
   const matchup: Matchup | undefined = MATCHUPS[idx];
-  const position = useMemo(() => (matchup ? getMatchupPosition(matchup.id) : 'gpt-left'), [matchup?.id]);
-  const leftSide: 'gpt' | 'banana' = position === 'gpt-left' ? 'gpt' : 'banana';
-  const rightSide: 'gpt' | 'banana' = leftSide === 'gpt' ? 'banana' : 'gpt';
 
-  const leftSrc = matchup ? (leftSide === 'gpt' ? matchup.gpt : matchup.banana) : '';
-  const rightSrc = matchup ? (rightSide === 'gpt' ? matchup.gpt : matchup.banana) : '';
-  const leftMissing = matchup ? (leftSide === 'gpt' ? !!matchup.gptMissing : !!matchup.bananaMissing) : false;
-  const rightMissing = matchup ? (rightSide === 'gpt' ? !!matchup.gptMissing : !!matchup.bananaMissing) : false;
+  // GPT always on the left, Nano Banana always on the right — açık karşılaştırma
+  const leftSrc = matchup ? matchup.gpt : '';
+  const rightSrc = matchup ? matchup.banana : '';
+  const leftMissing = matchup ? !!matchup.gptMissing : false;
+  const rightMissing = matchup ? !!matchup.bananaMissing : false;
 
   const votedCount = getLocalVotes().length;
   const progress = votedCount + (phase !== 'choosing' ? 1 : 0);
@@ -67,7 +65,7 @@ export default function Vote() {
           setPhase('choosing');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-      }, 2200);
+      }, 1800);
     },
     [matchup, phase, submitting, idx, navigate]
   );
@@ -81,14 +79,14 @@ export default function Vote() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (phase !== 'choosing') return;
-      if (e.key === '1') handleVote(leftSide);
-      else if (e.key === '2') handleVote(rightSide);
+      if (e.key === '1') handleVote('gpt');
+      else if (e.key === '2') handleVote('banana');
       else if (e.key === '3') handleVote('tie');
       else if (e.key === '4') handleVote('skip');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleVote, phase, leftSide, rightSide]);
+  }, [handleVote, phase]);
 
   if (!matchup) {
     return (
@@ -112,12 +110,6 @@ export default function Vote() {
       </div>
     );
   }
-
-  const revealGpt = phase !== 'choosing';
-  const leftLabel = leftSide === 'gpt' ? 'GPT Image 2' : 'Nano Banana 2';
-  const rightLabel = rightSide === 'gpt' ? 'GPT Image 2' : 'Nano Banana 2';
-  const leftColorClass = leftSide === 'gpt' ? 'bg-gpt/90 text-white' : 'bg-banana/90 text-white';
-  const rightColorClass = rightSide === 'gpt' ? 'bg-gpt/90 text-white' : 'bg-banana/90 text-white';
 
   const communityTotal = communityStats
     ? communityStats.gpt + communityStats.banana + communityStats.tie + communityStats.skip
@@ -172,7 +164,7 @@ export default function Vote() {
         )}
       </div>
 
-      {/* Images */}
+      {/* Images — labels always visible */}
       <AnimatePresence mode="wait">
         <motion.div
           key={matchup.id}
@@ -182,68 +174,52 @@ export default function Vote() {
           transition={{ duration: 0.25 }}
           className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-5"
         >
-          {/* Left */}
+          {/* GPT (left) */}
           <div className="relative">
+            <div className="absolute -top-3 left-3 z-10 px-3 py-1 rounded-full bg-gpt text-white text-xs font-bold shadow-lg shadow-gpt/40 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+              GPT Image 2
+            </div>
             <AspectImage
               src={leftSrc}
-              alt="Seçenek 1"
+              alt="GPT Image 2"
               aspect={matchup.aspectRatio}
               missing={leftMissing}
-              className={`transition-all ${
-                phase !== 'choosing' && choice === leftSide ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
-              } ${phase !== 'choosing' && choice === rightSide ? 'opacity-50' : ''}`}
+              className={`transition-all ring-1 ring-gpt/30 ${
+                phase !== 'choosing' && choice === 'gpt' ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
+              } ${phase !== 'choosing' && choice === 'banana' ? 'opacity-50' : ''}`}
             />
-            <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/70 backdrop-blur text-[11px] font-bold">
+            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-mono text-gray-300">
               1
             </div>
-            <AnimatePresence>
-              {revealGpt && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.35 }}
-                  className={`absolute bottom-2 left-2 right-2 sm:left-auto px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg ${leftColorClass}`}
-                >
-                  {leftLabel}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
 
-          {/* Right */}
+          {/* Nano Banana (right) */}
           <div className="relative">
+            <div className="absolute -top-3 left-3 z-10 px-3 py-1 rounded-full bg-banana text-white text-xs font-bold shadow-lg shadow-banana/40 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+              Nano Banana 2
+            </div>
             <AspectImage
               src={rightSrc}
-              alt="Seçenek 2"
+              alt="Nano Banana 2"
               aspect={matchup.aspectRatio}
               missing={rightMissing}
-              className={`transition-all ${
-                phase !== 'choosing' && choice === rightSide ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
-              } ${phase !== 'choosing' && choice === leftSide ? 'opacity-50' : ''}`}
+              className={`transition-all ring-1 ring-banana/30 ${
+                phase !== 'choosing' && choice === 'banana' ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
+              } ${phase !== 'choosing' && choice === 'gpt' ? 'opacity-50' : ''}`}
             />
-            <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/70 backdrop-blur text-[11px] font-bold">
+            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-mono text-gray-300">
               2
             </div>
-            <AnimatePresence>
-              {revealGpt && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.35, delay: 0.05 }}
-                  className={`absolute bottom-2 left-2 right-2 sm:left-auto px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg ${rightColorClass}`}
-                >
-                  {rightLabel}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </motion.div>
       </AnimatePresence>
 
       {/* Buttons */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-        <VoteBtn disabled={phase !== 'choosing' || leftMissing} onClick={() => handleVote(leftSide)} kbd="1" label="Sol daha iyi" variant="left" active={choice === leftSide} />
-        <VoteBtn disabled={phase !== 'choosing' || rightMissing} onClick={() => handleVote(rightSide)} kbd="2" label="Sağ daha iyi" variant="right" active={choice === rightSide} />
+        <VoteBtn disabled={phase !== 'choosing' || leftMissing} onClick={() => handleVote('gpt')} kbd="1" label="GPT Image 2" variant="gpt" active={choice === 'gpt'} />
+        <VoteBtn disabled={phase !== 'choosing' || rightMissing} onClick={() => handleVote('banana')} kbd="2" label="Nano Banana 2" variant="banana" active={choice === 'banana'} />
         <VoteBtn disabled={phase !== 'choosing'} onClick={() => handleVote('tie')} kbd="3" label="İkisi de iyi" variant="tie" active={choice === 'tie'} />
         <VoteBtn disabled={phase !== 'choosing'} onClick={() => handleVote('skip')} kbd="4" label="Karar veremedim" variant="skip" active={choice === 'skip'} />
       </div>
@@ -251,7 +227,7 @@ export default function Vote() {
       {/* Feedback */}
       <div className="min-h-[80px] mt-5">
         <AnimatePresence>
-          {revealGpt && agreementPct !== null && (
+          {phase !== 'choosing' && agreementPct !== null && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -274,7 +250,7 @@ export default function Vote() {
       </div>
 
       <p className="text-center text-[11px] text-gray-600 mt-4">
-        Klavye: 1, 2, 3, 4 · Oy verdikten sonra değiştirilemez
+        Klavye: 1 = GPT, 2 = Banana, 3 = İkisi de iyi, 4 = Kararsız · Oy verdikten sonra değiştirilemez
       </p>
     </div>
   );
@@ -292,17 +268,17 @@ function VoteBtn({
   disabled: boolean;
   kbd: string;
   label: string;
-  variant: 'left' | 'right' | 'tie' | 'skip';
+  variant: 'gpt' | 'banana' | 'tie' | 'skip';
   active: boolean;
 }) {
   const base = 'relative rounded-xl py-4 px-3 font-semibold text-sm transition-all border disabled:cursor-not-allowed';
   const styles = {
-    left: active
-      ? 'bg-gpt/20 border-gpt text-white'
-      : 'bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 hover:border-white/20',
-    right: active
-      ? 'bg-banana/20 border-banana text-white'
-      : 'bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 hover:border-white/20',
+    gpt: active
+      ? 'bg-gpt/25 border-gpt text-white shadow-glow'
+      : 'bg-gpt/10 border-gpt/40 text-gpt-soft hover:bg-gpt/20 hover:border-gpt',
+    banana: active
+      ? 'bg-banana/25 border-banana text-white shadow-glow-banana'
+      : 'bg-banana/10 border-banana/40 text-banana-soft hover:bg-banana/20 hover:border-banana',
     tie: active
       ? 'bg-win/20 border-win text-white'
       : 'bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 hover:border-white/20',
@@ -313,7 +289,7 @@ function VoteBtn({
 
   return (
     <button onClick={onClick} disabled={disabled} className={`${base} ${styles} ${disabled ? 'opacity-60' : ''}`}>
-      <kbd className="absolute top-2 right-2 text-[10px] font-mono text-gray-500 border border-white/10 rounded px-1 py-[1px]">
+      <kbd className="absolute top-2 right-2 text-[10px] font-mono text-gray-400 border border-white/10 rounded px-1 py-[1px]">
         {kbd}
       </kbd>
       <span className="block">{label}</span>

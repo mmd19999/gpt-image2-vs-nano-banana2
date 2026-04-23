@@ -167,7 +167,7 @@ export default function Results() {
           )}
 
           <div className="mt-5 pt-4 border-t border-white/5 text-[10px] text-gray-500 text-center">
-            {byMatchup.size} matchup · Körlemesine · {new Date().toLocaleDateString('tr-TR')}
+            {byMatchup.size} matchup · GPT Image 2 vs Nano Banana 2 · {new Date().toLocaleDateString('tr-TR')}
           </div>
         </div>
 

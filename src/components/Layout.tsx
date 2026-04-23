@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <main className="flex-1">{children}</main>
       <footer className="mt-16 border-t border-white/5 py-8 text-center text-xs text-gray-500">
         <div className="max-w-6xl mx-auto px-4">
-          Körlemesine karşılaştırma · Oyunuz sunucu tarafında Netlify Blobs ile saklanır
+          GPT Image 2 vs Nano Banana 2 · Oyunuz sunucu tarafında Netlify Blobs ile saklanır
         </div>
       </footer>
     </div>

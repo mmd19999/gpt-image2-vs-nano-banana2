@@ -69,7 +69,7 @@ export default function Leaderboard() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-gray-400 mb-5"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-win animate-pulse" />
-          20 MATCHUP · KÖRLEMESİNE OYLAMA · CANLI SONUÇLAR
+          20 MATCHUP · AÇIK KARŞILAŞTIRMA · CANLI SONUÇLAR
         </motion.div>
         <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-[1.05] mb-4">
           <span className="gradient-text">GPT Image 2</span>
@@ -77,7 +77,7 @@ export default function Leaderboard() {
           <span className="gradient-text">Nano Banana 2</span>
         </h1>
         <p className="max-w-xl mx-auto text-gray-400 text-sm sm:text-base">
-          20 farklı promptta iki modelin çıktılarını körlemesine karşılaştır. Her oyun canlı leaderboard'a yansır.
+          20 farklı promptta iki modelin çıktılarını karşılaştır ve oyunu kullan. Her oy canlı leaderboard'a yansır.
         </p>
 
         <div className="mt-7 flex gap-3 justify-center flex-wrap">
@@ -266,7 +266,7 @@ export default function Leaderboard() {
         <Link to="/oyla" className="btn-primary">
           Oylamaya Başla →
         </Link>
-        <div className="mt-3 text-xs text-gray-500">Körlemesine · 20 matchup · 2 dakika</div>
+        <div className="mt-3 text-xs text-gray-500">20 matchup · ~2 dakika</div>
       </div>
 
       {CATEGORIES.map((c) => (
