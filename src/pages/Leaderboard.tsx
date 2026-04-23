@@ -157,10 +157,6 @@ export default function Leaderboard() {
             </div>
 
             <ScoreBar gpt={totals.gpt} banana={totals.banana} height="h-4" />
-
-            <div className="flex justify-end text-xs text-gray-500 mt-4">
-              <span>Karar veremedim: <AnimatedNumber value={totals.skip + totals.tie} /></span>
-            </div>
           </>
         )}
         {error && (

@@ -7,6 +7,8 @@ export default function AspectImage({
   aspect,
   className = '',
   missing = false,
+  missingTitle = 'Görsel üretilmedi',
+  missingReason,
   onLoad,
 }: {
   src: string;
@@ -14,6 +16,8 @@ export default function AspectImage({
   aspect: AspectRatio;
   className?: string;
   missing?: boolean;
+  missingTitle?: string;
+  missingReason?: string;
   onLoad?: () => void;
 }) {
   const ar = aspectRatioValue(aspect);
@@ -21,12 +25,17 @@ export default function AspectImage({
   if (missing) {
     return (
       <div
-        className={`w-full rounded-xl bg-gradient-to-br from-bg-2 to-bg-3 border border-white/5 flex items-center justify-center text-center p-6 ${className}`}
+        className={`w-full rounded-xl bg-gradient-to-br from-bg-2 to-bg-3 border border-dashed border-white/10 flex items-center justify-center text-center p-6 sm:p-8 ${className}`}
         style={style}
       >
-        <div className="text-gray-500 text-sm">
-          <div className="text-2xl mb-2">—</div>
-          Bu matchup için görsel eksik
+        <div className="max-w-xs">
+          <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-2xl">
+            🚫
+          </div>
+          <div className="text-sm font-semibold text-gray-200 mb-2">{missingTitle}</div>
+          {missingReason && (
+            <div className="text-xs text-gray-400 leading-relaxed">{missingReason}</div>
+          )}
         </div>
       </div>
     );

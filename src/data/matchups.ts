@@ -78,6 +78,7 @@ export const MATCHUPS: Matchup[] = [
     gpt: mu(7, 'gpt'),
     banana: mu(7, 'banana'),
     bananaMissing: true,
+    missingReason: 'Nano Banana 2 bu görseli üretmeyi reddetti (muhtemelen telif koruması nedeniyle).',
   },
   {
     id: 8,

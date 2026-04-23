@@ -134,10 +134,6 @@ export default function Results() {
             </div>
           </div>
 
-          <div className="rounded-lg px-3 py-2 bg-white/5 mb-5">
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider">Karar veremedim</div>
-            <div className="text-lg font-bold text-gray-300">{mine.skip + mine.tie}</div>
-          </div>
 
           {winner && winner !== 'draw' && (
             <div className="text-center py-3 rounded-lg bg-white/5 border border-white/10">

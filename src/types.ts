@@ -14,6 +14,7 @@ export interface Matchup {
   banana: string;
   gptMissing?: boolean;
   bananaMissing?: boolean;
+  missingReason?: string;
 }
 
 export interface MatchupStats {

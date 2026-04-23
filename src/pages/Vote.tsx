@@ -83,12 +83,11 @@ export default function Vote() {
       if (zoom) return;
       if (phase !== 'choosing') return;
       if (e.key === '1') handleVote('gpt');
-      else if (e.key === '2') handleVote('skip');
-      else if (e.key === '3') handleVote('banana');
+      else if (e.key === '2' && !rightMissing) handleVote('banana');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleVote, phase, zoom]);
+  }, [handleVote, phase, zoom, rightMissing]);
 
   if (!matchup) {
     return (
@@ -238,14 +237,18 @@ export default function Vote() {
                 alt="Nano Banana 2"
                 aspect={matchup.aspectRatio}
                 missing={rightMissing}
+                missingTitle="Nano Banana 2 üretmedi"
+                missingReason={matchup.missingReason}
                 className={`transition-all ring-1 ring-banana/30 ${
                   phase !== 'choosing' && choice === 'banana' ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
                 } ${phase !== 'choosing' && choice === 'gpt' ? 'opacity-50' : ''}`}
               />
             </button>
-            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-mono text-gray-300 flex items-center gap-1 pointer-events-none">
-              <span>2</span><span className="text-gray-500">·</span><span>⤢</span>
-            </div>
+            {!rightMissing && (
+              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-mono text-gray-300 flex items-center gap-1 pointer-events-none">
+                <span>2</span><span className="text-gray-500">·</span><span>⤢</span>
+              </div>
+            )}
           </div>
         </motion.div>
       </AnimatePresence>
@@ -257,11 +260,26 @@ export default function Vote() {
       />
 
       {/* Buttons */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <VoteBtn disabled={phase !== 'choosing' || leftMissing} onClick={() => handleVote('gpt')} kbd="1" label="GPT Image 2" variant="gpt" active={choice === 'gpt'} />
-        <VoteBtn disabled={phase !== 'choosing'} onClick={() => handleVote('skip')} kbd="2" label="Karar veremedim" variant="skip" active={choice === 'skip'} />
-        <VoteBtn disabled={phase !== 'choosing' || rightMissing} onClick={() => handleVote('banana')} kbd="3" label="Nano Banana 2" variant="banana" active={choice === 'banana'} />
-      </div>
+      {rightMissing ? (
+        <div className="space-y-3">
+          <VoteBtn
+            disabled={phase !== 'choosing' || leftMissing}
+            onClick={() => handleVote('gpt')}
+            kbd="1"
+            label="GPT Image 2'yi seç"
+            variant="gpt"
+            active={choice === 'gpt'}
+          />
+          <p className="text-center text-xs text-gray-500">
+            Nano Banana 2 bu promptu reddettiği için oylama yalnızca GPT Image 2 için açık.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <VoteBtn disabled={phase !== 'choosing' || leftMissing} onClick={() => handleVote('gpt')} kbd="1" label="GPT Image 2" variant="gpt" active={choice === 'gpt'} />
+          <VoteBtn disabled={phase !== 'choosing' || rightMissing} onClick={() => handleVote('banana')} kbd="2" label="Nano Banana 2" variant="banana" active={choice === 'banana'} />
+        </div>
+      )}
 
       {/* Feedback */}
       <div className="min-h-[80px] mt-5">
@@ -289,7 +307,7 @@ export default function Vote() {
       </div>
 
       <p className="text-center text-[11px] text-gray-600 mt-4">
-        Klavye: 1 = GPT, 2 = Kararsız, 3 = Banana · Oy verdikten sonra değiştirilemez
+        Klavye: 1 = GPT Image 2, 2 = Nano Banana 2 · Oy verdikten sonra değiştirilemez
       </p>
     </div>
   );
@@ -307,10 +325,10 @@ function VoteBtn({
   disabled: boolean;
   kbd: string;
   label: string;
-  variant: 'gpt' | 'banana' | 'skip';
+  variant: 'gpt' | 'banana';
   active: boolean;
 }) {
-  const base = 'relative rounded-xl py-4 px-3 font-semibold text-sm transition-all border disabled:cursor-not-allowed';
+  const base = 'relative w-full rounded-xl py-4 sm:py-5 px-3 font-semibold text-sm sm:text-base transition-all border disabled:cursor-not-allowed';
   const styles = {
     gpt: active
       ? 'bg-gpt/25 border-gpt text-white shadow-glow'
@@ -318,9 +336,6 @@ function VoteBtn({
     banana: active
       ? 'bg-banana/25 border-banana text-white shadow-glow-banana'
       : 'bg-banana/10 border-banana/40 text-banana-soft hover:bg-banana/20 hover:border-banana',
-    skip: active
-      ? 'bg-gray-600/30 border-gray-500 text-white'
-      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20',
   }[variant];
 
   return (
