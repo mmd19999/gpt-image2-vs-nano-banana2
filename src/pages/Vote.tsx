@@ -7,6 +7,7 @@ import { getLocalVotes, saveLocalVote, resetVotes } from '../lib/session';
 import { submitVote } from '../lib/api';
 import CategoryBadge from '../components/CategoryBadge';
 import AspectImage from '../components/AspectImage';
+import Lightbox from '../components/Lightbox';
 
 type Phase = 'choosing' | 'revealing';
 
@@ -24,6 +25,7 @@ export default function Vote() {
   const [communityStats, setCommunityStats] = useState<{ gpt: number; banana: number; tie: number; skip: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState<{ src: string; caption?: string } | null>(null);
   const advanceTimer = useRef<number | null>(null);
 
   const matchup: Matchup | undefined = MATCHUPS[idx];
@@ -78,6 +80,7 @@ export default function Vote() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (zoom) return;
       if (phase !== 'choosing') return;
       if (e.key === '1') handleVote('gpt');
       else if (e.key === '2') handleVote('banana');
@@ -86,7 +89,7 @@ export default function Vote() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleVote, phase]);
+  }, [handleVote, phase, zoom]);
 
   if (!matchup) {
     return (
@@ -146,18 +149,34 @@ export default function Vote() {
 
         {matchup.references && matchup.references.length > 0 && (
           <div className="mt-4 pt-4 border-t border-white/5">
-            <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">
-              Referanslar ({matchup.references.length})
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] uppercase tracking-widest text-gray-500">
+                Prompt'a eklenen referanslar ({matchup.references.length})
+              </div>
+              <div className="text-[10px] text-gray-500">Tıkla → büyüt</div>
             </div>
-            <div className="flex gap-2 flex-wrap">
-              {matchup.references.map((r) => (
-                <img
+            <div className="flex gap-3 flex-wrap">
+              {matchup.references.map((r, i) => (
+                <button
                   key={r}
-                  src={r}
-                  alt="referans"
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border border-white/10"
-                  loading="lazy"
-                />
+                  type="button"
+                  onClick={() => setZoom({ src: r, caption: `Referans #${i + 1}` })}
+                  className="group relative w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all focus:outline-none focus:ring-2 focus:ring-gpt-soft"
+                  aria-label={`Referans ${i + 1}, büyütmek için tıkla`}
+                >
+                  <img
+                    src={r}
+                    alt={`Referans ${i + 1}`}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-lg">⤢</span>
+                  </div>
+                  <div className="absolute bottom-1 left-1 text-[9px] font-mono text-white/90 bg-black/60 rounded px-1.5 py-0.5">
+                    #{i + 1}
+                  </div>
+                </button>
               ))}
             </div>
           </div>
@@ -180,17 +199,25 @@ export default function Vote() {
               <span className="w-1.5 h-1.5 rounded-full bg-white" />
               GPT Image 2
             </div>
-            <AspectImage
-              src={leftSrc}
-              alt="GPT Image 2"
-              aspect={matchup.aspectRatio}
-              missing={leftMissing}
-              className={`transition-all ring-1 ring-gpt/30 ${
-                phase !== 'choosing' && choice === 'gpt' ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
-              } ${phase !== 'choosing' && choice === 'banana' ? 'opacity-50' : ''}`}
-            />
-            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-mono text-gray-300">
-              1
+            <button
+              type="button"
+              disabled={leftMissing}
+              onClick={() => !leftMissing && setZoom({ src: leftSrc, caption: 'GPT Image 2' })}
+              className="block w-full cursor-zoom-in disabled:cursor-default focus:outline-none"
+              aria-label="GPT Image 2 sonucunu büyüt"
+            >
+              <AspectImage
+                src={leftSrc}
+                alt="GPT Image 2"
+                aspect={matchup.aspectRatio}
+                missing={leftMissing}
+                className={`transition-all ring-1 ring-gpt/30 ${
+                  phase !== 'choosing' && choice === 'gpt' ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
+                } ${phase !== 'choosing' && choice === 'banana' ? 'opacity-50' : ''}`}
+              />
+            </button>
+            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-mono text-gray-300 flex items-center gap-1 pointer-events-none">
+              <span>1</span><span className="text-gray-500">·</span><span>⤢</span>
             </div>
           </div>
 
@@ -200,21 +227,35 @@ export default function Vote() {
               <span className="w-1.5 h-1.5 rounded-full bg-white" />
               Nano Banana 2
             </div>
-            <AspectImage
-              src={rightSrc}
-              alt="Nano Banana 2"
-              aspect={matchup.aspectRatio}
-              missing={rightMissing}
-              className={`transition-all ring-1 ring-banana/30 ${
-                phase !== 'choosing' && choice === 'banana' ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
-              } ${phase !== 'choosing' && choice === 'gpt' ? 'opacity-50' : ''}`}
-            />
-            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-mono text-gray-300">
-              2
+            <button
+              type="button"
+              disabled={rightMissing}
+              onClick={() => !rightMissing && setZoom({ src: rightSrc, caption: 'Nano Banana 2' })}
+              className="block w-full cursor-zoom-in disabled:cursor-default focus:outline-none"
+              aria-label="Nano Banana 2 sonucunu büyüt"
+            >
+              <AspectImage
+                src={rightSrc}
+                alt="Nano Banana 2"
+                aspect={matchup.aspectRatio}
+                missing={rightMissing}
+                className={`transition-all ring-1 ring-banana/30 ${
+                  phase !== 'choosing' && choice === 'banana' ? 'ring-2 ring-win shadow-[0_0_40px_rgba(16,185,129,0.35)]' : ''
+                } ${phase !== 'choosing' && choice === 'gpt' ? 'opacity-50' : ''}`}
+              />
+            </button>
+            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-mono text-gray-300 flex items-center gap-1 pointer-events-none">
+              <span>2</span><span className="text-gray-500">·</span><span>⤢</span>
             </div>
           </div>
         </motion.div>
       </AnimatePresence>
+
+      <Lightbox
+        src={zoom?.src ?? null}
+        caption={zoom?.caption}
+        onClose={() => setZoom(null)}
+      />
 
       {/* Buttons */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
