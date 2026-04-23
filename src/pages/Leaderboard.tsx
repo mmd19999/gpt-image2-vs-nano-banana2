@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MATCHUPS, CATEGORY_LABELS, CATEGORY_COLORS } from '../data/matchups';
 import type { LeaderboardData, Category } from '../types';
 import { fetchLeaderboard } from '../lib/api';
@@ -166,96 +166,16 @@ export default function Leaderboard() {
         )}
       </section>
 
-      {/* Category breakdown */}
+      {/* Category table */}
       {!empty && data && (
         <section className="mb-10">
           <h2 className="text-xs uppercase tracking-widest text-gray-500 mb-4 px-1">Kategori Dağılımı</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {CATEGORIES.map((cat) => {
-              const s = data.byCategory[cat] ?? { gpt: 0, banana: 0, tie: 0, skip: 0 };
-              const total = s.gpt + s.banana + s.tie;
-              const gPct = total ? Math.round((s.gpt / total) * 100) : 0;
-              const bPct = total ? Math.round((s.banana / total) * 100) : 0;
-              return (
-                <div key={cat} className="glass rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <CategoryBadge category={cat} size="sm" />
-                    <span className="text-[11px] text-gray-500">{total} oy</span>
-                  </div>
-                  {total === 0 ? (
-                    <div className="text-xs text-gray-600 py-2">Henüz oy yok</div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between text-sm font-semibold mb-1.5">
-                        <span className="text-gpt-soft">{gPct}%</span>
-                        <span className="text-banana-soft">{bPct}%</span>
-                      </div>
-                      <ScoreBar gpt={s.gpt} banana={s.banana} tie={s.tie} height="h-2" />
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <CategoryTable data={data} />
         </section>
       )}
 
-      {/* Matchup grid */}
-      <section>
-        <h2 className="text-xs uppercase tracking-widest text-gray-500 mb-4 px-1">20 Matchup</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {MATCHUPS.map((m, i) => {
-            const s = data?.byMatchup?.[String(m.id)] ?? { gpt: 0, banana: 0, tie: 0, skip: 0 };
-            const total = s.gpt + s.banana + s.tie;
-            const gPct = total ? Math.round((s.gpt / total) * 100) : 0;
-            const bPct = total ? 100 - gPct : 0;
-            return (
-              <motion.div
-                key={m.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: Math.min(0.02 * i, 0.3) }}
-                className="glass rounded-xl overflow-hidden hover:border-white/20 transition-colors"
-                style={{ borderColor: `${CATEGORY_COLORS[m.category]}22` }}
-              >
-                <div className="grid grid-cols-2 gap-px bg-black/40">
-                  <div className="aspect-square bg-bg-2 overflow-hidden">
-                    <img src={m.gpt} alt="GPT" loading="lazy" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="aspect-square bg-bg-2 overflow-hidden">
-                    {m.bananaMissing ? (
-                      <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">—</div>
-                    ) : (
-                      <img src={m.banana} alt="Banana" loading="lazy" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <CategoryBadge category={m.category} size="sm" />
-                    <span className="text-[11px] text-gray-500 font-mono">#{m.id}</span>
-                  </div>
-                  <p className="text-xs text-gray-400 line-clamp-2 min-h-[2.5rem] mb-3">
-                    {m.prompt}
-                  </p>
-                  {total === 0 ? (
-                    <div className="text-[11px] text-gray-600">Henüz oy yok</div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between text-[11px] font-semibold mb-1">
-                        <span className="text-gpt-soft">GPT {gPct}%</span>
-                        <span className="text-banana-soft">{bPct}% Banana</span>
-                      </div>
-                      <ScoreBar gpt={s.gpt} banana={s.banana} tie={s.tie} height="h-1.5" />
-                      <div className="text-[10px] text-gray-600 mt-2">{total} oy</div>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
+      {/* Matchups with tabs */}
+      <MatchupsSection data={data} />
 
       <div className="text-center mt-14">
         <Link to="/oyla" className="btn-primary">
@@ -264,9 +184,295 @@ export default function Leaderboard() {
         <div className="mt-3 text-xs text-gray-500">20 matchup · ~2 dakika</div>
       </div>
 
-      {CATEGORIES.map((c) => (
-        <div key={c} className="hidden">{CATEGORY_LABELS[c]}</div>
+    </div>
+  );
+}
+
+/* ---------- Category Table ---------- */
+
+function CategoryTable({ data }: { data: LeaderboardData }) {
+  const rows = CATEGORIES.map((cat) => {
+    const s = data.byCategory[cat] ?? { gpt: 0, banana: 0, tie: 0, skip: 0 };
+    const total = s.gpt + s.banana;
+    const gPct = total ? Math.round((s.gpt / total) * 100) : 0;
+    const bPct = total ? 100 - gPct : 0;
+    const winner: 'gpt' | 'banana' | 'draw' | null =
+      total === 0 ? null : s.gpt === s.banana ? 'draw' : s.gpt > s.banana ? 'gpt' : 'banana';
+    return { cat, s, total, gPct, bPct, winner };
+  });
+
+  return (
+    <div className="glass rounded-xl overflow-hidden">
+      {/* Desktop table */}
+      <div className="hidden sm:block">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-[10px] uppercase tracking-widest text-gray-500 bg-white/[0.02]">
+              <th className="text-left px-5 py-3 font-medium">Kategori</th>
+              <th className="text-right px-3 py-3 font-medium text-gpt-soft">GPT Image 2</th>
+              <th className="text-center px-3 py-3 font-medium w-[30%]">Dağılım</th>
+              <th className="text-left px-3 py-3 font-medium text-banana-soft">Nano Banana 2</th>
+              <th className="text-right px-5 py-3 font-medium">Toplam</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ cat, s, total, gPct, bPct, winner }) => (
+              <tr key={cat} className="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
+                <td className="px-5 py-3">
+                  <CategoryBadge category={cat} size="sm" />
+                </td>
+                <td className="text-right px-3 py-3 font-mono tabular-nums">
+                  <div className={`font-bold ${winner === 'gpt' ? 'text-gpt-soft' : 'text-gray-300'}`}>
+                    {gPct}%
+                  </div>
+                  <div className="text-[11px] text-gray-500">{s.gpt} oy</div>
+                </td>
+                <td className="px-3 py-3 min-w-[160px]">
+                  {total === 0 ? (
+                    <div className="text-center text-[11px] text-gray-600">—</div>
+                  ) : (
+                    <ScoreBar gpt={s.gpt} banana={s.banana} height="h-1.5" />
+                  )}
+                </td>
+                <td className="text-left px-3 py-3 font-mono tabular-nums">
+                  <div className={`font-bold ${winner === 'banana' ? 'text-banana-soft' : 'text-gray-300'}`}>
+                    {bPct}%
+                  </div>
+                  <div className="text-[11px] text-gray-500">{s.banana} oy</div>
+                </td>
+                <td className="text-right px-5 py-3 text-gray-400 tabular-nums">{total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile stacked list */}
+      <div className="sm:hidden divide-y divide-white/5">
+        {rows.map(({ cat, s, total, gPct, bPct, winner }) => (
+          <div key={cat} className="px-4 py-4">
+            <div className="flex items-center justify-between mb-2">
+              <CategoryBadge category={cat} size="sm" />
+              <span className="text-[11px] text-gray-500">{total} oy</span>
+            </div>
+            {total === 0 ? (
+              <div className="text-xs text-gray-600">Henüz oy yok</div>
+            ) : (
+              <>
+                <div className="flex justify-between text-xs font-bold mb-1.5">
+                  <span className={winner === 'gpt' ? 'text-gpt-soft' : 'text-gray-300'}>GPT {gPct}% ({s.gpt})</span>
+                  <span className={winner === 'banana' ? 'text-banana-soft' : 'text-gray-300'}>({s.banana}) {bPct}% Banana</span>
+                </div>
+                <ScoreBar gpt={s.gpt} banana={s.banana} height="h-1.5" />
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Matchups with tabs ---------- */
+
+type Tab = 'grid' | 'table';
+
+function MatchupsSection({ data }: { data: LeaderboardData | null }) {
+  const [tab, setTab] = useState<Tab>('grid');
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h2 className="text-xs uppercase tracking-widest text-gray-500">20 Matchup</h2>
+        <div className="inline-flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 text-xs">
+          <button
+            onClick={() => setTab('grid')}
+            className={`px-3 py-1.5 rounded-md transition-all ${
+              tab === 'grid' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Görsel
+          </button>
+          <button
+            onClick={() => setTab('table')}
+            className={`px-3 py-1.5 rounded-md transition-all ${
+              tab === 'table' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Tablo
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {tab === 'grid' ? (
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+          >
+            <MatchupGrid data={data} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="table"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+          >
+            <MatchupTable data={data} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
+
+function useMatchupRows(data: LeaderboardData | null) {
+  return useMemo(() =>
+    MATCHUPS.map((m) => {
+      const s = data?.byMatchup?.[String(m.id)] ?? { gpt: 0, banana: 0, tie: 0, skip: 0 };
+      const total = s.gpt + s.banana;
+      const gPct = total ? Math.round((s.gpt / total) * 100) : 0;
+      const bPct = total ? 100 - gPct : 0;
+      const winner: 'gpt' | 'banana' | 'draw' | null =
+        total === 0 ? null : s.gpt === s.banana ? 'draw' : s.gpt > s.banana ? 'gpt' : 'banana';
+      return { m, s, total, gPct, bPct, winner };
+    })
+  , [data]);
+}
+
+function MatchupGrid({ data }: { data: LeaderboardData | null }) {
+  const rows = useMatchupRows(data);
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {rows.map(({ m, s, total, gPct, bPct, winner }, i) => (
+        <motion.div
+          key={m.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: Math.min(0.02 * i, 0.25) }}
+          className="glass rounded-xl overflow-hidden hover:border-white/20 transition-colors"
+          style={{ borderColor: `${CATEGORY_COLORS[m.category]}22` }}
+        >
+          <div className="grid grid-cols-2 gap-px bg-black/40">
+            <div className="aspect-square bg-bg-2 overflow-hidden">
+              <img src={m.gpt} alt="GPT" loading="lazy" className="w-full h-full object-cover" />
+            </div>
+            <div className="aspect-square bg-bg-2 overflow-hidden">
+              {m.bananaMissing ? (
+                <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">—</div>
+              ) : (
+                <img src={m.banana} alt="Banana" loading="lazy" className="w-full h-full object-cover" />
+              )}
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <CategoryBadge category={m.category} size="sm" />
+              <span className="text-[11px] text-gray-500 font-mono">#{m.id}</span>
+            </div>
+            <p className="text-xs text-gray-400 line-clamp-2 min-h-[2.5rem] mb-3">{m.prompt}</p>
+            {total === 0 ? (
+              <div className="text-[11px] text-gray-600">Henüz oy yok</div>
+            ) : (
+              <>
+                <div className="flex justify-between text-[11px] font-bold mb-1">
+                  <span className={winner === 'gpt' ? 'text-gpt-soft' : 'text-gray-400'}>GPT {gPct}%</span>
+                  <span className={winner === 'banana' ? 'text-banana-soft' : 'text-gray-400'}>{bPct}% Banana</span>
+                </div>
+                <ScoreBar gpt={s.gpt} banana={s.banana} height="h-1.5" />
+                <div className="text-[10px] text-gray-600 mt-2">{total} oy</div>
+              </>
+            )}
+          </div>
+        </motion.div>
       ))}
+    </div>
+  );
+}
+
+function MatchupTable({ data }: { data: LeaderboardData | null }) {
+  const rows = useMatchupRows(data);
+  return (
+    <div className="glass rounded-xl overflow-hidden">
+      {/* Desktop */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-[10px] uppercase tracking-widest text-gray-500 bg-white/[0.02]">
+              <th className="text-left px-4 py-3 font-medium w-12">#</th>
+              <th className="text-left px-3 py-3 font-medium">Kategori</th>
+              <th className="text-left px-3 py-3 font-medium">Prompt</th>
+              <th className="text-right px-3 py-3 font-medium text-gpt-soft">GPT</th>
+              <th className="text-center px-3 py-3 font-medium w-[20%]">Dağılım</th>
+              <th className="text-left px-3 py-3 font-medium text-banana-soft">Banana</th>
+              <th className="text-right px-4 py-3 font-medium">Oy</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ m, s, total, gPct, bPct, winner }) => (
+              <tr key={m.id} className="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
+                <td className="px-4 py-3 font-mono text-gray-500 text-xs">#{m.id}</td>
+                <td className="px-3 py-3"><CategoryBadge category={m.category} size="sm" /></td>
+                <td className="px-3 py-3 text-gray-300 max-w-[340px]">
+                  <div className="truncate" title={m.prompt}>{m.prompt}</div>
+                </td>
+                <td className="text-right px-3 py-3 font-mono tabular-nums">
+                  <div className={`font-bold ${winner === 'gpt' ? 'text-gpt-soft' : 'text-gray-300'}`}>
+                    {total ? `${gPct}%` : '—'}
+                  </div>
+                  <div className="text-[11px] text-gray-500">{s.gpt}</div>
+                </td>
+                <td className="px-3 py-3 min-w-[140px]">
+                  {total === 0 ? (
+                    <div className="text-center text-[11px] text-gray-600">—</div>
+                  ) : (
+                    <ScoreBar gpt={s.gpt} banana={s.banana} height="h-1.5" />
+                  )}
+                </td>
+                <td className="text-left px-3 py-3 font-mono tabular-nums">
+                  <div className={`font-bold ${winner === 'banana' ? 'text-banana-soft' : 'text-gray-300'}`}>
+                    {total ? `${bPct}%` : '—'}
+                  </div>
+                  <div className="text-[11px] text-gray-500">{s.banana}</div>
+                </td>
+                <td className="text-right px-4 py-3 text-gray-400 tabular-nums">{total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile stacked list */}
+      <div className="md:hidden divide-y divide-white/5">
+        {rows.map(({ m, s, total, gPct, bPct, winner }) => (
+          <div key={m.id} className="px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono text-gray-500">#{m.id}</span>
+                <CategoryBadge category={m.category} size="sm" />
+              </div>
+              <span className="text-[11px] text-gray-500">{total} oy</span>
+            </div>
+            <div className="text-xs text-gray-400 truncate mb-2">{m.prompt}</div>
+            {total === 0 ? (
+              <div className="text-[11px] text-gray-600">Henüz oy yok</div>
+            ) : (
+              <>
+                <div className="flex justify-between text-[11px] font-bold mb-1">
+                  <span className={winner === 'gpt' ? 'text-gpt-soft' : 'text-gray-300'}>GPT {gPct}% ({s.gpt})</span>
+                  <span className={winner === 'banana' ? 'text-banana-soft' : 'text-gray-300'}>({s.banana}) {bPct}% Banana</span>
+                </div>
+                <ScoreBar gpt={s.gpt} banana={s.banana} height="h-1.5" />
+              </>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
