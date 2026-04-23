@@ -1,0 +1,198 @@
+import type { Matchup, Category } from '../types';
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  fotogercekcilik: 'Fotogerçekçilik',
+  yazi: 'Yazı Render',
+  tasarim: 'Tasarım',
+  karakter: 'Karakter & Editleme',
+  superguc: 'Süper Güç',
+  elyazisi: 'El Yazısı',
+};
+
+export const CATEGORY_COLORS: Record<Category, string> = {
+  fotogercekcilik: '#F59E0B',
+  yazi: '#3B82F6',
+  tasarim: '#EC4899',
+  karakter: '#10B981',
+  superguc: '#EF4444',
+  elyazisi: '#A78BFA',
+};
+
+const img = (name: string) => `/images/references/${name}.webp`;
+const mu = (id: number, side: 'gpt' | 'banana') => `/images/matchups/${id}-${side}.webp`;
+
+export const MATCHUPS: Matchup[] = [
+  {
+    id: 1,
+    category: 'fotogercekcilik',
+    aspectRatio: '3:4',
+    prompt: 'Kadıköy\'de bir kafede oturan 34 yaşında, hafif çilli Türk bir kadının iPhone ile çekilmiş doğal fotoğrafı, pencereden gelen yumuşak öğlen ışığı, filtresiz, doğal cilt dokusu',
+    gpt: mu(1, 'gpt'),
+    banana: mu(1, 'banana'),
+  },
+  {
+    id: 2,
+    category: 'fotogercekcilik',
+    aspectRatio: '3:4',
+    prompt: 'Ürün fotoğrafı: rustik ahşap bir masa üzerinde "Ayvalık Altın" etiketli premium zeytinyağı şişesi, yumuşak sabah ışığı, sığ alan derinliği, profesyonel stüdyo çekimi',
+    gpt: mu(2, 'gpt'),
+    banana: mu(2, 'banana'),
+  },
+  {
+    id: 3,
+    category: 'fotogercekcilik',
+    aspectRatio: '1:1',
+    prompt: 'Çiğ tanelerini süzen bir Türk kahvesi fincanının makro çekimi, fincanın kenarındaki buhar damlacıkları net görünsün, her köpük kabarcığı ayrı ayrı belirgin, yüksek detay, doğal ışık',
+    gpt: mu(3, 'gpt'),
+    banana: mu(3, 'banana'),
+  },
+  {
+    id: 4,
+    category: 'fotogercekcilik',
+    aspectRatio: '16:9',
+    prompt: 'Geceleri Kadıköy\'de bir sokak lezzetleri tezgahı, ıslak kaldırımda neon yansımaları, sinematik anamorfik lens, hafif sis, 35mm film görünümü',
+    gpt: mu(4, 'gpt'),
+    banana: mu(4, 'banana'),
+  },
+  {
+    id: 5,
+    category: 'yazi',
+    aspectRatio: '4:3',
+    prompt: 'Eski moda bir kafede, tebeşirle yazılmış menü tahtası. Başlıkta "Bugünün Menüsü" yazıyor. Altında 6 farklı yemek adı ve fiyatları Türkçe olarak el yazısıyla yazılmış: Mercimek Çorbası 45₺, Izgara Köfte 120₺, Fırın Makarna 95₺, Çoban Salata 60₺, Sütlaç 40₺, Türk Kahvesi 35₺. Gerçekçi tebeşir dokusu.',
+    gpt: mu(5, 'gpt'),
+    banana: mu(5, 'banana'),
+  },
+  {
+    id: 6,
+    category: 'yazi',
+    aspectRatio: '3:4',
+    prompt: 'Modern bir infografik, başlığı "Yapay Zeka Modelleri 2026". 5 farklı AI modelini karşılaştıran çubuk grafikler ve ikonlar, temiz kurumsal tasarım, Türkçe etiketler, minimalist renk paleti',
+    gpt: mu(6, 'gpt'),
+    banana: mu(6, 'banana'),
+  },
+  {
+    id: 7,
+    category: 'yazi',
+    aspectRatio: '2:3',
+    prompt: '1970\'lerin Türk sinemasına ait vintage film afişi. Film adı: "Son Tren". Dramatik ışıklandırma, döneme uygun tipografi, yıpranmış kağıt dokusu, altta oyuncu kadrosu listesi Türkçe olarak yazılmış',
+    gpt: mu(7, 'gpt'),
+    banana: mu(7, 'banana'),
+    bananaMissing: true,
+  },
+  {
+    id: 8,
+    category: 'tasarim',
+    aspectRatio: '1:1',
+    prompt: 'Instagram kare post tasarımı, bir kahve dükkanının yeni ürün duyurusu için. Başlıkta "Yeni: Fıstıklı Latte" yazıyor. Fotogerçekçi bir latte fincanı ortada, üstünde fıstık serpintisi, sıcak kahverengi ve krem renkli arka plan, minimalist modern tasarım, sosyal medya için optimize',
+    gpt: mu(8, 'gpt'),
+    banana: mu(8, 'banana'),
+  },
+  {
+    id: 9,
+    category: 'tasarim',
+    aspectRatio: '3:4',
+    prompt: 'Bir etkinlik flyeri: "İstanbul Yapay Zeka Zirvesi 2026". Tarih: 15 Haziran. Konum: Zorlu PSM. Modern, teknolojik görünüm, mor ve siyah renk paleti, 4 ana konuşmacının isimleri ve konuları listelenmiş, QR kod yeri altta, Türkçe metin',
+    gpt: mu(9, 'gpt'),
+    banana: mu(9, 'banana'),
+  },
+  {
+    id: 10,
+    category: 'karakter',
+    aspectRatio: '2:3',
+    prompt: 'Bu kişiyi 2030 Time Magazine kapağına koy. Başlık: "Yılın Yapay Zeka Yaratıcısı". Profesyonel dergi kapağı tasarımı, dramatik portre ışığı, yüz detayları ve ifadesi birebir korunsun',
+    references: [img('img1')],
+    gpt: mu(10, 'gpt'),
+    banana: mu(10, 'banana'),
+  },
+  {
+    id: 11,
+    category: 'karakter',
+    aspectRatio: '16:9',
+    prompt: 'Aynı kişiyi 3 farklı kıyafetle yan yana göster: solda rahat günlük kıyafet, ortada iş takımı, sağda modern sokak stili. Yüz, saç ve vücut oranları tamamen tutarlı olsun, stüdyo ışığı',
+    references: [img('img2')],
+    gpt: mu(11, 'gpt'),
+    banana: mu(11, 'banana'),
+  },
+  {
+    id: 12,
+    category: 'karakter',
+    aspectRatio: '3:2',
+    prompt: 'Üç referans görselini doğal şekilde birleştir: kişi, ürünü elinde tutarken verilen mekanda çekilmiş sinematik bir editorial fotoğraf. Dergi kapağı kalitesinde, doğal ışık, hiçbir referans zorlama görünmesin',
+    references: [img('img2'), img('img3'), img('img4')],
+    gpt: mu(12, 'gpt'),
+    banana: mu(12, 'banana'),
+  },
+  {
+    id: 13,
+    category: 'karakter',
+    aspectRatio: '3:4',
+    prompt: 'Resimdeki kişiyi koru ama kişi 2. fotoğraftaki mekana doğal bir şekilde yerleşsin. Kişinin yüzü, kıyafeti, duruşu birebir aynı kalmalı, ama doğal bir şekilde resimde uygun bir yere yerleşsin. Işık yeni arka plana uyum sağlasın, doğal görünsün.',
+    references: [img('img2'), img('img5')],
+    gpt: mu(13, 'gpt'),
+    banana: mu(13, 'banana'),
+  },
+  {
+    id: 14,
+    category: 'superguc',
+    aspectRatio: '16:9',
+    prompt: 'Aynı karakterin İstiklal Caddesi\'nde gün batımında yürüyüşünün 5 sinematik ardışık kare: 1) geniş plan arkadan, 2) yan profil orta plan, 3) yüz yakın plan, 4) üstten drone açısı, 5) önden geniş plan. Karakter tutarlılığı, kıyafet ve saç tüm karelerde aynı kalmalı, sinematik renk düzenleme',
+    gpt: mu(14, 'gpt'),
+    banana: mu(14, 'banana'),
+  },
+  {
+    id: 15,
+    category: 'superguc',
+    aspectRatio: '1:1',
+    prompt: '3x3 ızgara düzeninde bir Türk babaannenin baklava yapma hikayesi: 1) hamuru açarken, 2) fıstık serperken, 3) katları üst üste koyarken, 4) tepsiyi yağlarken, 5) kesim yaparken, 6) fırına verirken, 7) şerbeti dökerken, 8) sunarken, 9) torunuyla paylaşırken. Fotogerçekçi, tutarlı mutfak ve karakter, doğal ışık',
+    gpt: mu(15, 'gpt'),
+    banana: mu(15, 'banana'),
+  },
+  {
+    id: 16,
+    category: 'elyazisi',
+    aspectRatio: '4:3',
+    prompt: 'Bu el yazısı örneğini referans al. Aynı el yazısı stiliyle, aynı kalem dokusuyla, aynı eğimle bir sayfaya 50 kere: "Bir daha derse vaktinde geleceğim, geç kalmayacağım." yaz. Metin çizgili bir not defteri sayfasında olsun. Doğal bir yazı olsun, benim kalemimden çıkmış gibi olsun.',
+    references: [img('img6')],
+    gpt: mu(16, 'gpt'),
+    banana: mu(16, 'banana'),
+  },
+  {
+    id: 17,
+    category: 'elyazisi',
+    aspectRatio: '3:4',
+    prompt: 'Aynı el yazısı ile bir hikâye yaz. Hikâye yapay zekânın gelecekteki konumu ile ilgili olsun. Sayfanın sağ üstünde de elle çizilmiş bir Google logosu olsun.',
+    references: [img('img6')],
+    gpt: mu(17, 'gpt'),
+    banana: mu(17, 'banana'),
+  },
+  {
+    id: 18,
+    category: 'elyazisi',
+    aspectRatio: '4:3',
+    prompt: 'Aynı el yazısı stiliyle karmaşık bir geometri problemi çöz.',
+    references: [img('img6')],
+    gpt: mu(18, 'gpt'),
+    banana: mu(18, 'banana'),
+  },
+  {
+    id: 19,
+    category: 'tasarim',
+    aspectRatio: '1:1',
+    prompt: '"KöşeKahve" adında bir kahve dükkanı için logo tasarla. Atmosfer sıcak ve samimi, insanlar yavaşlayıp kendilerini evde hissedeceği bir yer. Hedef kitle: 25-40 yaş, şehrin hızından yorgun ama estetik değer veren insanlar. Modern olsun ama nostaljik bir dokunuş da olsun. Gerisini sen düşün.',
+    gpt: mu(19, 'gpt'),
+    banana: mu(19, 'banana'),
+  },
+  {
+    id: 20,
+    category: 'tasarim',
+    aspectRatio: '1:1',
+    prompt: '"KöşeKahve" adında bir kahve dükkanı için minimalist logo tasarla. Kompozisyon: üstte yuvarlak çerçeve içinde sade bir kahve fincanı ikonu, altında ince serif tipografiyle marka adı, en altta ince harflerle "EST. 2026" yazısı. Renk paleti: koyu espresso kahverengi (#3B2417) zemin üzerine krem (#F4E8D4) elementler. Fincandan yukarı doğru 3 ince buhar çizgisi çıksın. Beyaz arka plan, ortalanmış kompozisyon, profesyonel marka kılavuzu kalitesinde.',
+    gpt: mu(20, 'gpt'),
+    banana: mu(20, 'banana'),
+  },
+];
+
+export function aspectRatioValue(ar: string): number {
+  const [w, h] = ar.split(':').map(Number);
+  return w / h;
+}
