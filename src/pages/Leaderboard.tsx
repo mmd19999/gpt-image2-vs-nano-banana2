@@ -85,11 +85,11 @@ export default function Leaderboard() {
             Oylamaya Başla →
           </Link>
           <a
-            href="https://youtube.com"
+            href="https://www.youtube.com/watch?v=coyM9hUlgdg"
             target="_blank"
             rel="noreferrer"
             className="btn-secondary"
-            title="YouTube videosu yakında"
+            title="YouTube'da karşılaştırma videosunu izle"
           >
             YouTube Videosu
           </a>
